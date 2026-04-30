@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import { giftSets } from '@/data/products';
@@ -57,11 +58,12 @@ export default function GiftSets() {
               }}
             >
               <div className="relative overflow-hidden rounded-t" style={{ aspectRatio: '4/3' }}>
-                <img
+                <Image
                   src={gift.image}
                   alt={lang === 'zh' ? gift.nameCn : gift.nameEn}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                  loading="lazy"
+                  fill
+                  sizes="(min-width: 768px) 33vw, 100vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                 />
                 <div
                   className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs"

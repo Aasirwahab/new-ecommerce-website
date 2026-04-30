@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect } from 'react';
 import Header from '@/sections/Header';
 import Hero from '@/sections/Hero';

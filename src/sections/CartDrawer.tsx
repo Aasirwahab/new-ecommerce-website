@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import { X, Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
@@ -47,10 +48,12 @@ export default function CartDrawer() {
                     style={{ background: 'rgba(139,115,85,0.06)' }}
                   >
                     <div className="w-20 h-20 rounded overflow-hidden flex-shrink-0">
-                      <img
+                      <Image
                         src={item.product.image}
                         alt={lang === 'zh' ? item.product.nameCn : item.product.nameEn}
-                        className="w-full h-full object-cover"
+                        width={80}
+                        height={80}
+                        className="h-full w-full object-cover"
                       />
                     </div>
                     <div className="flex-1 min-w-0">

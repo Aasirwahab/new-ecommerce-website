@@ -1,9 +1,6 @@
 import { useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useLanguage } from '@/context/LanguageContext';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
 
 export default function Philosophy() {
   const { t } = useLanguage();
@@ -17,32 +14,42 @@ export default function Philosophy() {
     const textCol = textRef.current;
     if (!section || !imageCol || !textCol) return;
 
-    const imgTween = gsap.to(imageCol, {
-      yPercent: -10,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: section,
-        start: 'top bottom',
-        end: 'bottom top',
-        scrub: true,
-      },
-    });
+    let cleanup: (() => void) | undefined;
 
-    const textTween = gsap.to(textCol, {
-      yPercent: -3,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: section,
-        start: 'top bottom',
-        end: 'bottom top',
-        scrub: true,
-      },
-    });
+    Promise.all([import('gsap'), import('gsap/ScrollTrigger')]).then(
+      ([{ default: gsap }, { ScrollTrigger }]) => {
+        gsap.registerPlugin(ScrollTrigger);
 
-    return () => {
-      imgTween.kill();
-      textTween.kill();
-    };
+        const imgTween = gsap.to(imageCol, {
+          yPercent: -10,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: section,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: true,
+          },
+        });
+
+        const textTween = gsap.to(textCol, {
+          yPercent: -3,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: section,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: true,
+          },
+        });
+
+        cleanup = () => {
+          imgTween.kill();
+          textTween.kill();
+        };
+      }
+    );
+
+    return () => cleanup?.();
   }, []);
 
   return (
@@ -55,11 +62,12 @@ export default function Philosophy() {
       <div className="max-w-[1440px] mx-auto px-6 md:px-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
           <div ref={imageRef} className="relative overflow-hidden rounded" style={{ aspectRatio: '3/4' }}>
-            <img
+            <Image
               src="/images/philosophy.jpg"
               alt="Tea set on linen"
-              className="w-full h-full object-cover"
-              loading="lazy"
+              fill
+              sizes="(min-width: 768px) 50vw, 100vw"
+              className="object-cover"
             />
           </div>
 
@@ -105,10 +113,12 @@ export default function Philosophy() {
             </blockquote>
 
             <div className="mt-10 flex items-center gap-4">
-              <img
+              <Image
                 src="/images/founder.jpg"
                 alt="Founder"
-                className="w-14 h-14 rounded-full object-cover"
+                width={56}
+                height={56}
+                className="rounded-full object-cover"
                 style={{ border: '2px solid #D4A574' }}
               />
               <div>

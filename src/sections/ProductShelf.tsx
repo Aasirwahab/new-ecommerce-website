@@ -1,12 +1,9 @@
 import { useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import { products } from '@/data/products';
 import { Plus } from 'lucide-react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
 
 const categories = [
   { key: 'tea', labelCn: '茶器', labelEn: 'Tea Ware' },
@@ -26,20 +23,30 @@ export default function ProductShelf() {
     if (!shelfSection) return;
     const bands = shelfSection.querySelectorAll('.shelf-band');
 
-    const st = ScrollTrigger.create({
-      trigger: shelfSection,
-      start: 'top 80%',
-      end: 'bottom 20%',
-      onEnter: () => {
-        gsap.fromTo(
-          bands,
-          { x: (i: number) => (i % 2 === 0 ? -100 : 100), opacity: 0 },
-          { x: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: 'power3.out' }
-        );
-      },
-    });
+    let cleanup: (() => void) | undefined;
 
-    return () => { st.kill(); };
+    Promise.all([import('gsap'), import('gsap/ScrollTrigger')]).then(
+      ([{ default: gsap }, { ScrollTrigger }]) => {
+        gsap.registerPlugin(ScrollTrigger);
+
+        const st = ScrollTrigger.create({
+          trigger: shelfSection,
+          start: 'top 80%',
+          end: 'bottom 20%',
+          onEnter: () => {
+            gsap.fromTo(
+              bands,
+              { x: (i: number) => (i % 2 === 0 ? -80 : 80), opacity: 0 },
+              { x: 0, opacity: 1, duration: 0.7, stagger: 0.08, ease: 'power3.out' }
+            );
+          },
+        });
+
+        cleanup = () => st.kill();
+      }
+    );
+
+    return () => cleanup?.();
   }, []);
 
   const handleAddToCart = (e: React.MouseEvent, product: typeof products[0]) => {
@@ -66,11 +73,12 @@ export default function ProductShelf() {
               {catProducts.map(product => (
                 <div key={product.id} className="product-card group">
                   <div className="relative overflow-hidden" style={{ height: 200 }}>
-                    <img
+                    <Image
                       src={product.image}
                       alt={lang === 'zh' ? product.nameCn : product.nameEn}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
+                      fill
+                      sizes="240px"
+                      className="object-cover"
                     />
                     <div className="absolute top-3 right-3">
                       <div

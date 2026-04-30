@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import Image from 'next/image';
 import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import { products } from '@/data/products';
@@ -145,11 +146,12 @@ export default function AllProducts() {
                   border: '1px solid rgba(139,115,85,0.15)',
                 }}
               >
-                <img
+                <Image
                   src={product.image}
                   alt={lang === 'zh' ? product.nameCn : product.nameEn}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                  loading="lazy"
+                  fill
+                  sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                 />
                 <div className="absolute top-3 right-3">
                   <div
@@ -211,11 +213,13 @@ export default function AllProducts() {
             </button>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="rounded overflow-hidden" style={{ aspectRatio: '3/4' }}>
-                <img
+              <div className="relative rounded overflow-hidden" style={{ aspectRatio: '3/4' }}>
+                <Image
                   src={quickView.image}
                   alt={lang === 'zh' ? quickView.nameCn : quickView.nameEn}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  className="object-cover"
                 />
               </div>
               <div>

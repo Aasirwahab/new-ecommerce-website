@@ -1,9 +1,6 @@
 import { useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useLanguage } from '@/context/LanguageContext';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
 
 const seasonalItems = [
   {
@@ -57,24 +54,34 @@ export default function SeasonalGallery() {
 
     if (totalWidth <= 0) return;
 
-    const tween = gsap.to(track, {
-      x: -totalWidth,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: section,
-        pin: true,
-        scrub: 1,
-        end: () => '+=' + totalWidth,
-        invalidateOnRefresh: true,
-      },
-    });
+    let cleanup: (() => void) | undefined;
 
-    return () => {
-      tween.kill();
-      ScrollTrigger.getAll().forEach(st => {
-        if (st.vars.trigger === section) st.kill();
-      });
-    };
+    Promise.all([import('gsap'), import('gsap/ScrollTrigger')]).then(
+      ([{ default: gsap }, { ScrollTrigger }]) => {
+        gsap.registerPlugin(ScrollTrigger);
+
+        const tween = gsap.to(track, {
+          x: -totalWidth,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: section,
+            pin: true,
+            scrub: 1,
+            end: () => '+=' + totalWidth,
+            invalidateOnRefresh: true,
+          },
+        });
+
+        cleanup = () => {
+          tween.kill();
+          ScrollTrigger.getAll().forEach(st => {
+            if (st.vars.trigger === section) st.kill();
+          });
+        };
+      }
+    );
+
+    return () => cleanup?.();
   }, []);
 
   return (
@@ -97,9 +104,12 @@ export default function SeasonalGallery() {
       <div className="gallery-track" ref={trackRef}>
         {seasonalItems.map((item, i) => (
           <div key={i} className="gallery-item">
-            <div
-              className="gallery-img"
-              style={{ backgroundImage: `url(${item.image})` }}
+            <Image
+              src={item.image}
+              alt={lang === 'zh' ? item.nameCn : item.nameEn}
+              fill
+              sizes="65vw"
+              className="object-cover"
             />
             <div
               className="absolute inset-0"

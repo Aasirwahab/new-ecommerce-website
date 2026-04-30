@@ -1,59 +1,58 @@
 import { useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useLanguage } from '@/context/LanguageContext';
 import { processSteps } from '@/data/products';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
 
 export default function ProcessCarousel() {
   const { lang } = useLanguage();
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const tweensRef = useRef<gsap.core.Tween[]>([]);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
     const rows = wrapper.querySelectorAll<HTMLElement>('.carousel-row');
     const baseVelocity = 50;
-    const tweens: gsap.core.Tween[] = [];
+    let cleanup: (() => void) | undefined;
 
-    rows.forEach((row) => {
-      const direction = row.dataset.direction === 'right' ? 1 : -1;
-      const totalWidth = row.scrollWidth / 2;
+    Promise.all([import('gsap'), import('gsap/ScrollTrigger')]).then(
+      ([{ default: gsap }, { ScrollTrigger }]) => {
+        gsap.registerPlugin(ScrollTrigger);
+        const tweens = Array.from(rows).map((row) => {
+          const direction = row.dataset.direction === 'right' ? 1 : -1;
+          const totalWidth = row.scrollWidth / 2;
 
-      const tween = gsap.to(row, {
-        x: direction * totalWidth,
-        duration: totalWidth / baseVelocity,
-        ease: 'none',
-        repeat: -1,
-        modifiers: {
-          x: gsap.utils.unitize((x) => {
-            const v = parseFloat(x);
-            return ((v % totalWidth) + totalWidth) % totalWidth * (direction < 0 && v < 0 ? -1 : 1);
-          }),
-        },
-      });
+          return gsap.to(row, {
+            x: direction * totalWidth,
+            duration: totalWidth / baseVelocity,
+            ease: 'none',
+            repeat: -1,
+            modifiers: {
+              x: gsap.utils.unitize((x) => {
+                const v = parseFloat(x);
+                return ((v % totalWidth) + totalWidth) % totalWidth * (direction < 0 && v < 0 ? -1 : 1);
+              }),
+            },
+          });
+        });
 
-      tweens.push(tween);
-    });
+        const st = ScrollTrigger.create({
+          trigger: wrapper,
+          start: 'top bottom',
+          end: 'bottom top',
+          onEnter: () => tweens.forEach(t => t.play()),
+          onLeave: () => tweens.forEach(t => t.pause()),
+          onEnterBack: () => tweens.forEach(t => t.play()),
+          onLeaveBack: () => tweens.forEach(t => t.pause()),
+        });
 
-    tweensRef.current = tweens;
+        cleanup = () => {
+          tweens.forEach(t => t.kill());
+          st.kill();
+        };
+      }
+    );
 
-    const st = ScrollTrigger.create({
-      trigger: wrapper,
-      start: 'top bottom',
-      end: 'bottom top',
-      onEnter: () => tweens.forEach(t => t.play()),
-      onLeave: () => tweens.forEach(t => t.pause()),
-      onEnterBack: () => tweens.forEach(t => t.play()),
-      onLeaveBack: () => tweens.forEach(t => t.pause()),
-    });
-
-    return () => {
-      tweens.forEach(t => t.kill());
-      st.kill();
-    };
+    return () => cleanup?.();
   }, []);
 
   const steps = [...processSteps, ...processSteps];
@@ -76,9 +75,12 @@ export default function ProcessCarousel() {
         <div className="carousel-row" data-direction="left">
           {steps.map((step, i) => (
             <div key={`left-${i}`} className="carousel-card">
-              <div
-                className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: `url(${step.image})` }}
+              <Image
+                src={step.image}
+                alt={lang === 'zh' ? step.titleCn : step.titleEn}
+                fill
+                sizes="300px"
+                className="object-cover"
               />
               <div
                 className="absolute inset-0"

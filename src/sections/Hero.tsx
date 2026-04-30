@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
-import gsap from 'gsap';
 
 export default function Hero() {
   const { t } = useLanguage();
@@ -8,23 +7,29 @@ export default function Hero() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const tl = gsap.timeline({ delay: 0.3 });
-    if (titleRef.current) {
-      tl.fromTo(
-        titleRef.current.children,
-        { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 1.2, stagger: 0.15, ease: 'power3.out' }
-      );
-    }
-    if (scrollRef.current) {
-      tl.fromTo(
-        scrollRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.8 },
-        '-=0.4'
-      );
-    }
-    return () => { tl.kill(); };
+    let cleanup: (() => void) | undefined;
+
+    import('gsap').then(({ default: gsap }) => {
+      const tl = gsap.timeline({ delay: 0.2 });
+      if (titleRef.current) {
+        tl.fromTo(
+          titleRef.current.children,
+          { y: 32, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.9, stagger: 0.12, ease: 'power3.out' }
+        );
+      }
+      if (scrollRef.current) {
+        tl.fromTo(
+          scrollRef.current,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.6 },
+          '-=0.3'
+        );
+      }
+      cleanup = () => tl.kill();
+    });
+
+    return () => cleanup?.();
   }, []);
 
   return (
@@ -34,6 +39,9 @@ export default function Hero() {
         muted
         loop
         playsInline
+        preload="metadata"
+        poster="/images/3_Zens_Lifestyle_Cobblestone_Outdoor.png"
+        aria-hidden="true"
         className="absolute inset-0 w-full h-full object-cover"
         style={{ opacity: 0.85 }}
       >
